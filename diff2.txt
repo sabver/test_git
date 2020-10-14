@@ -1,4 +1,0 @@
-public class Test{
-  public String str;
-  public String img;
-}
