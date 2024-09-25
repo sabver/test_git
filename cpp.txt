@@ -23,13 +23,13 @@ const bool enableValidationLayers = true;
 #endif
 
 VkResult CreateDebugUtilsMessengerEXT(
-	VkInstance instance, 
-	const VkDebugUtilsMessengerCreateInfoEXT* pCreateInfo, 
-	const VkAllocationCallbacks* pAllocator, 
+	VkInstance instance,
+	const VkDebugUtilsMessengerCreateInfoEXT* pCreateInfo,
+	const VkAllocationCallbacks* pAllocator,
 	VkDebugUtilsMessengerEXT* pDebugMessenger
 ) {
-
-
+	// vkGetInstanceProcAddr is an important function in Vulkan used to obtain function pointers for other Vulkan functions. 
+	// Its primary role is to dynamically load Vulkan functions, especially when using extension features.
 	auto func = (PFN_vkCreateDebugUtilsMessengerEXT)vkGetInstanceProcAddr(instance, "vkCreateDebugUtilsMessengerEXT");
 	if (func != nullptr) {
 		return func(instance, pCreateInfo, pAllocator, pDebugMessenger);
@@ -40,8 +40,8 @@ VkResult CreateDebugUtilsMessengerEXT(
 }
 
 void DestroyDebugUtilsMessengerEXT(
-	VkInstance instance, 
-	VkDebugUtilsMessengerEXT debugMessenger, 
+	VkInstance instance,
+	VkDebugUtilsMessengerEXT debugMessenger,
 	const VkAllocationCallbacks* pAllocator
 ) {
 	auto func = (PFN_vkDestroyDebugUtilsMessengerEXT)vkGetInstanceProcAddr(instance, "vkDestroyDebugUtilsMessengerEXT");
@@ -59,6 +59,7 @@ struct QueueFamilyIndices {
 	}
 };
 
+
 class HelloTriangleApplication {
 public:
 	void run() {
@@ -67,7 +68,6 @@ public:
 		mainLoop();
 		cleanup();
 	}
-
 private:
 	GLFWwindow* window;
 
@@ -95,7 +95,7 @@ private:
 		setupDebugMessenger();
 		createSurface();
 		pickPhysicalDevice();
-		createLogicalDevice();
+		createlogicalDevice();
 	}
 
 	void mainLoop() {
@@ -154,7 +154,7 @@ private:
 		}
 
 		if (vkCreateInstance(&createInfo, nullptr, &instance) != VK_SUCCESS) {
-			throw std::runtime_error("failed to create instance!");
+			throw std::runtime_error("failed to create instance");
 		}
 	}
 
@@ -183,18 +183,18 @@ private:
 		}
 	}
 
-
-
-
-
-
-
+	/**
+	* Physical Device
+	* Definition: A physical device represents the actual hardware in the system, such as a GPU (Graphics Processing Unit).
+	* Role: It provides an abstraction of the hardware capabilities, allowing applications to query and utilize these capabilities. The physical device includes detailed information about the hardware, such as supported features, performance metrics, and limitations.
+	* Example: During Vulkan initialization, you first enumerate all physical devices in the system and then select one or more to use.
+	 **/
 	void pickPhysicalDevice() {
 		uint32_t deviceCount = 0;
 		vkEnumeratePhysicalDevices(instance, &deviceCount, nullptr);
 
 		if (deviceCount == 0) {
-			throw std::runtime_error("failed to find GPUs with Vulkan support!");
+			throw std::runtime_error("failed to find GPUs with vulkan support!");
 		}
 
 		std::vector<VkPhysicalDevice> devices(deviceCount);
@@ -210,18 +210,18 @@ private:
 		if (physicalDevice == VK_NULL_HANDLE) {
 			throw std::runtime_error("failed to find a suitable GPU!");
 		}
+
 	}
 
-
-
-
-
-
-
-
-	void createLogicalDevice() {
+	/*
+	* Logical Device
+	* Definition: A logical device is an abstract instance of a physical device, providing an interface to interact with the physical device.
+	* Role: It allows applications to submit commands and manage resources without directly dealing with the physical hardware. The logical device includes queues that are used to perform different types of operations (e.g., graphics, compute, and transfer).
+	* Example: When creating a logical device, you specify the queue families and queues to use, enabled extensions, and other features. The logical device is created using the vkCreateDevice function.
+	*/
+	void createlogicalDevice() {
 		QueueFamilyIndices indices = findQueueFamilies(physicalDevice);
-
+		std::cout << "indices.isComplete: " << indices.isComplete() << std::endl;
 		std::vector<VkDeviceQueueCreateInfo> queueCreateInfos;
 		std::set<uint32_t> uniqueQueueFamilies = { indices.graphicsFamily.value(), indices.presentFamily.value() };
 
@@ -249,7 +249,7 @@ private:
 
 		if (enableValidationLayers) {
 			createInfo.enabledLayerCount = static_cast<uint32_t>(validationLayers.size());
-			createInfo.ppEnabledLayerNames = validationLayers.data();
+			createInfo.ppEnabledExtensionNames = validationLayers.data();
 		}
 		else {
 			createInfo.enabledLayerCount = 0;
@@ -258,9 +258,9 @@ private:
 		if (vkCreateDevice(physicalDevice, &createInfo, nullptr, &device) != VK_SUCCESS) {
 			throw std::runtime_error("failed to create logical device!");
 		}
-
-
-
+		// When you create a logical device, you specify the queue families and the number of queues you want to create for each family.
+		// After the logical device is created, you use vkGetDeviceQueue to get the handles to these queues. 
+		// These handles are then used to submit command buffers for execution.
 		vkGetDeviceQueue(device, indices.graphicsFamily.value(), 0, &graphicsQueue);
 		vkGetDeviceQueue(device, indices.presentFamily.value(), 0, &presentQueue);
 	}
@@ -275,15 +275,15 @@ private:
 
 		uint32_t queueFamilyCount = 0;
 		vkGetPhysicalDeviceQueueFamilyProperties(device, &queueFamilyCount, nullptr);
-
-
+		// VkQueueFamilyProperties is a structure that describes the properties of a queue family within a physical device. 
+		// Queue families are groups of queues that support similar types of operations, such as graphics, compute, or transfer.
 		std::vector<VkQueueFamilyProperties> queueFamilies(queueFamilyCount);
 		vkGetPhysicalDeviceQueueFamilyProperties(device, &queueFamilyCount, queueFamilies.data());
 
 		int i = 0;
 		for (const auto& queueFamily : queueFamilies) {
-
-
+			// Queue Flags: Capabilities of the queues (e.g., graphics, compute).
+			// VK_QUEUE_GRAPHICS_BIT: Supports graphics operations.
 			if (queueFamily.queueFlags & VK_QUEUE_GRAPHICS_BIT) {
 				indices.graphicsFamily = i;
 			}
@@ -311,9 +311,9 @@ private:
 		glfwExtensions = glfwGetRequiredInstanceExtensions(&glfwExtensionCount);
 
 		std::vector<const char*> extensions(glfwExtensions, glfwExtensions + glfwExtensionCount);
-
-
-
+		for (uint32_t i = 0; i < extensions.size(); i++) {
+			std::cout << extensions[i] << std::endl;
+		}
 		if (enableValidationLayers) {
 			extensions.push_back(VK_EXT_DEBUG_UTILS_EXTENSION_NAME);
 		}
@@ -348,12 +348,12 @@ private:
 	}
 
 	static VKAPI_ATTR VkBool32 VKAPI_CALL debugCallback(
-		VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity, 
-		VkDebugUtilsMessageTypeFlagsEXT messageType, 
-		const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData, 
+		VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
+		VkDebugUtilsMessageTypeFlagsEXT messageType,
+		const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData,
 		void* pUserData
 	) {
-		std::cerr << "validation layer: " << pCallbackData->pMessage << std::endl;
+		std::cerr << "validation layer:" << pCallbackData->pMessage << std::endl;
 		return VK_FALSE;
 	}
 
@@ -370,4 +370,3 @@ int main() {
 	}
 	return EXIT_SUCCESS;
 }
-
